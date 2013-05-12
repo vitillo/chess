@@ -1,5 +1,5 @@
 function Game(){
-  this.state = new SplashState(this);
+  this.state = new SplashGameState(this);
 }
 
 Game.prototype = {

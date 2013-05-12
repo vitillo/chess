@@ -1,10 +1,10 @@
-function State(context){
+function GameState(context){
   this.context = context;
 }
 
-State.prototype.onclick = function(){}
-State.prototype.render = function(){}
-State.prototype._getTileFromClick = function(e){
+GameState.prototype.onclick = function(){}
+GameState.prototype.render = function(){}
+GameState.prototype._getTileFromClick = function(e){
   var x = 2*e.clientX/window.innerWidth - 1;
   var y = 2*(1 - e.clientY/window.innerHeight) - 1;
 
@@ -26,23 +26,23 @@ State.prototype._getTileFromClick = function(e){
   return null;
 }
 
-function SplashState(context){
-  State.apply(this, arguments);
+function SplashGameState(context){
+  GameState.apply(this, arguments);
 }
 
-SplashState.prototype = Object.create(State.prototype);
-SplashState.prototype.onclick = function(e){
+SplashGameState.prototype = Object.create(GameState.prototype);
+SplashGameState.prototype.onclick = function(e){
   this.context.state = new TerminateSplash(this.context);
 }
-SplashState.prototype.render = function(time){
+SplashGameState.prototype.render = function(time){
   game.cameraWrapper.rotation.y += 0.01 % (2*Math.PI);
 }
 
 function TerminateSplash(context){
-  State.apply(this, arguments);
+  GameState.apply(this, arguments);
   this.rotationSign = game.cameraWrapper.rotation.y < Math.PI ? -1 : 1;
 }
-TerminateSplash.prototype = Object.create(State.prototype);
+TerminateSplash.prototype = Object.create(GameState.prototype);
 TerminateSplash.prototype.render = function(time){
   var completed = false;
 
@@ -68,10 +68,10 @@ TerminateSplash.prototype.render = function(time){
 }
 
 function WhiteSelectSrc(context){
-  State.apply(this, arguments);
+  GameState.apply(this, arguments);
 }
 
-WhiteSelectSrc.prototype = Object.create(State.prototype);
+WhiteSelectSrc.prototype = Object.create(GameState.prototype);
 WhiteSelectSrc.prototype.onclick = function(e){
   var anim;
   var tile = this._getTileFromClick(e);
@@ -86,11 +86,11 @@ WhiteSelectSrc.prototype.onclick = function(e){
 }
 
 function WhiteSelectDest(context, source){
-  State.apply(this, arguments);
+  GameState.apply(this, arguments);
   this.source = source;
 }
 
-WhiteSelectDest.prototype = Object.create(State.prototype);
+WhiteSelectDest.prototype = Object.create(GameState.prototype);
 WhiteSelectDest.prototype.onclick = function(e){
   var tile = this._getTileFromClick(e);
   var anim;
@@ -117,11 +117,11 @@ WhiteSelectDest.prototype.onclick = function(e){
 }
 
 function Animation(context, animation){
-  State.apply(this, arguments);
+  GameState.apply(this, arguments);
   this.animation = animation;
 }
 
-Animation.prototype = Object.create(State.prototype);
+Animation.prototype = Object.create(GameState.prototype);
 Animation.prototype.render = function(time){
   if(!this.animation(time)){
     this.context.state = new WhiteSelectSrc(this.context);

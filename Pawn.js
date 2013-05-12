@@ -1,11 +1,11 @@
-function Pawn(type, color, position, scene, tile){
-  this.type = type;
+function Pawn(rank, color, position, scene, tile){
+  this.rank = rank;
   this.color = color;
   this.position = position;
   this.scene = scene;
   this.tile = tile;
 
-  this.load(type, scene);
+  this.load(rank, scene);
 }
 
 Pawn.prototype = {
@@ -16,7 +16,7 @@ Pawn.prototype = {
     var material = new THREE.MeshPhongMaterial({ambient: 0x111111, map: texture});
 
     loader.load(
-        "assets/" + this.type + ".js",
+        "assets/" + this.rank + ".js",
          function (geometry) {
            self.mesh = new THREE.Mesh(geometry, material);
 
