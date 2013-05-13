@@ -1,4 +1,4 @@
-function MovesDB(white_is_south){
+function MovesDB(){
   this.moves = [];
 
   for(var i = 0; i < 8; i++){
@@ -117,34 +117,42 @@ MovesDB.prototype = {
     }
   },
 
-  iterator: function(color, rank, x, y){
+  iterator: function(state, color, rank, x, y){
     var self = this;
     var index = 0;
     var direction = (color == "black" && rank == "pawn" ? "s" : "n");
 
-    return function(changeDirection){
-      if(changeDirection){
-        direction = self._nextDirection(direction);
-        index = 0;
-      }
+    function changeDirection(){
+      direction = self._nextDirection(direction);
+      index = 0;
+    }
+
+    return function(){
+      var move;
+      var res;
 
       while(true){
         if(!direction) // no more moves left
           return null;
 
-        var move = self.moves[x][y][rank][direction][index];
+        move = self.moves[x][y][rank][direction][index];
 
         if(move){ // move exists
+          res = state.validateMove(move, rank); 
           index++;
+
+          if(res.isLastInDirection)
+            changeDirection();
+ 
+          if(!res.valid)
+            continue;
+
           return move;
-        }else if(rank == "pawn"){
+        }else if(rank == "pawn") // pawn has only one direction
           return null;
-        }else{
-          index = 0;
-          direction = self._nextDirection(direction);
-        }
+        else
+          changeDirection();
       }
     }
   },
-
 }

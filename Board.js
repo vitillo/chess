@@ -113,7 +113,6 @@ Board.prototype = {
     var board = this.board;
     var nextMove;
     var move;
-    var blocked = false;
 
     if(!tile.pawn || tile.pawn.color == "black")
       return;
@@ -125,35 +124,12 @@ Board.prototype = {
     this.clear();
     tile.highlight(true);
 
+    generateMove = this.movesDB.iterator(this.state, tile.pawn.color, tile.pawn.rank, tile.x, tile.y);
 
-    var changeDirection = false;
-    generateMove = this.movesDB.iterator(tile.pawn.color, tile.pawn.rank, tile.x, tile.y);
-
-    while(move = generateMove(changeDirection)){
-      changeDirection = false;
-
-      blocked = !this._highlightTile(move.x, move.y);
-
-      if(blocked && tile.pawn.rank != "knight"){
-        changeDirection = true;
-      }
+    while(move = generateMove()){
+      this.board[move.x][move.y].highlight(true);
     }
  },
-
-  _highlightTile: function(x, y){
-    if(x < 0 || x > 7 || y < 0 || y > 7)
-      return false;
-
-    if(!this.board[x][y].pawn){
-      this.board[x][y].highlight(true);
-      return true;
-    }else if(this.board[x][y].pawn.color == "black"){
-      this.board[x][y].highlight(true);
-      return false;
-    }
-
-    return false;
-  },
 
   clear : function(){
     for(var i = 0; i < 8; i++)

@@ -150,7 +150,7 @@ BoardState.prototype = {
         }
 
         if(!move)
-          moveGenerator = this.movesDB.generate(piece.color, piece.rank, i, j);
+          moveGenerator = this.movesDB.generate(this, piece.color, piece.rank, i, j);
 
         move = moveGenerator(this);
 
@@ -190,8 +190,24 @@ BoardState.prototype = {
     this.set(toX, toY, rank, color);
   },
 
-  getOpponent : function(){
+  validateMove: function(move, rank){
+    var piece = this.get(move.x, move.y);
+
+    if(!piece)
+      return {isLastInDirection: false, valid: true};
+    else if(piece.color == this.getOpponent())
+      return {isLastInDirection: true && rank != "knight", valid: true};
+    else
+      return {isLastInDirection: true && rank != "knight", valid: false};
+
+  },
+
+  getOpponent: function(){
     return this.player == "white" ? "black" : "white";
+  },
+
+  getPlayer: function(){
+    return this.player;
   }
 }
 
