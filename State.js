@@ -93,7 +93,6 @@ function WhiteSelectDest(context, source){
 WhiteSelectDest.prototype = Object.create(GameState.prototype);
 WhiteSelectDest.prototype.onclick = function(e){
   var tile = this._getTileFromClick(e);
-  var anim;
 
   if(!tile)
     return;
@@ -105,8 +104,8 @@ WhiteSelectDest.prototype.onclick = function(e){
   }
 
   if(tile.isHighlighted){
-    anim = game.board.movePawn(this.source, tile);
-    this.context.state = new Animation(this.context, anim);
+    var anim = game.board.movePawn(this.source, tile);
+    this.context.state = new Animation(this.context, anim, "white");
     game.board.clear();
   }else{
     if(tile.pawn && tile.pawn.color == "white"){
@@ -116,14 +115,26 @@ WhiteSelectDest.prototype.onclick = function(e){
   }
 }
 
-function Animation(context, animation){
+function Animation(context, animation, player){
   GameState.apply(this, arguments);
   this.animation = animation;
+  this.player = player;
 }
 
 Animation.prototype = Object.create(GameState.prototype);
 Animation.prototype.render = function(time){
   if(!this.animation(time)){
-    this.context.state = new WhiteSelectSrc(this.context);
+    this.context.state = this.player == "white" ? new BlackSelect(this.context) : new WhiteSelectSrc(this.context);
   }
+}
+
+function BlackSelect(context){
+  GameState.apply(this, arguments);
+}
+
+BlackSelect.prototype = Object.create(GameState.prototype);
+BlackSelect.prototype.render = function(){
+  var move = game.board.model.findMove();
+  var anim = game.board.movePawn(move.from, move.to);
+  this.context.state = new Animation(this.context, anim, "black");
 }

@@ -1,8 +1,7 @@
 function Board(size){
   this.size = size;
   this.board = [[], [], [], [], [], [], [], []];
-  this.movesDB = new MovesDB(); 
-  this.state = new BoardState("white");
+  this.model = new Model("white");
   
   for(var i = 0;  i < 8; i++)
     for(var j = 0; j < 8; j++)
@@ -45,7 +44,7 @@ Board.prototype = {
 
     for(var i = 0; i < 8; i++){
       for(var j = 0; j < 8; j++){
-        var pawn = this.state.get(i, j);
+        var pawn = this.model.get(i, j);
 
         if(!pawn)
           continue;
@@ -63,12 +62,15 @@ Board.prototype = {
     return new THREE.Vector3(base_x + x * this.size, 0, base_z - y * this.size);
   },
 
-  movePawn: function(fromTile, toTile){
+  movePawn: function(from, to){
+    var fromTile = this.board[from.x][from.y];
+    var toTile = this.board[to.x][to.y];
     var fromPos = this.getLocation(fromTile.x, fromTile.y);
     var toPos = this.getLocation(toTile.x, toTile.y);
     var pawn = fromTile.pawn;
 
-    this.state.applyMove(fromTile.x, fromTile.y, toTile.x, toTile.y, pawn.rank, pawn.color);
+    this.model.applyMove(fromTile, toTile);
+    toTile.pawn && toTile.pawn.unload();
 
     var cpoints = [fromPos];
     if(pawn.rank == "knight"){
@@ -111,7 +113,7 @@ Board.prototype = {
     var x = tile.x;
     var y = tile.y;
     var board = this.board;
-    var nextMove;
+    var moves;
     var move;
 
     if(!tile.pawn || tile.pawn.color == "black")
@@ -124,12 +126,13 @@ Board.prototype = {
     this.clear();
     tile.highlight(true);
 
-    generateMove = this.movesDB.iterator(this.state, tile.pawn.color, tile.pawn.rank, tile.x, tile.y);
+    moves = this.model.getMoves(tile);
 
-    while(move = generateMove()){
+    for(var i = 0; i < moves.length; i++){
+      move = moves[i];
       this.board[move.x][move.y].highlight(true);
     }
- },
+  },
 
   clear : function(){
     for(var i = 0; i < 8; i++)

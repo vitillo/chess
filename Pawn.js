@@ -32,5 +32,10 @@ Pawn.prototype = {
            self.scene.add(self.mesh);
         }
     );
+  },
+
+  unload: function(){
+    this.scene.remove(this.mesh);
+    this.tile.pawn = null;
   }
 };
