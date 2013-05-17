@@ -3,6 +3,8 @@ function GameState(game){
 }
 GameState.prototype.onclick = function(){}
 
+GameState.prototype.onkeydown = function(){}
+
 GameState.prototype.render = function(){}
 
 GameState.prototype._getTileFromClick = function(e){
@@ -38,6 +40,13 @@ function SplashScreen(game, message, reloadPieces){
 SplashScreen.prototype = Object.create(GameState.prototype);
 
 SplashScreen.prototype.onclick = function(e){
+  this.game.state = new TerminateSplashScreen(this.game);
+
+  if(this.reloadPieces)
+    this.game.board.loadPieces();
+}
+
+SplashScreen.prototype.onkeydown = function(e){
   this.game.state = new TerminateSplashScreen(this.game);
 
   if(this.reloadPieces)

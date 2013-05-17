@@ -33,6 +33,10 @@ Game.prototype = {
     this.state.onclick(e);
   },
 
+  onkeydown: function(e){
+    this.state.onkeydown(e);
+  },
+
   render: function(time){
     this.state.render(time);
     this.renderer.render(this.scene, this.camera);
@@ -47,11 +51,7 @@ Game.prototype = {
 
     document.onkeydown = function(e){
       e = e || window.event;
-      
-      switch(e.keyCode){
-        default:
-          break;
-      }
+      self.onkeydown(e);
     }
   },
 

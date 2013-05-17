@@ -1,13 +1,11 @@
 function Model(){
-  //this.state = p4_new_game();
+  this.state = p4_new_game();
+  p4_log = function(){}
 
   /* checkmate, stalemate, draw, promotion */
-  this.state = p4_fen2state("8/2P5/8/8/8/6K1/4Q3/6k1 w - - 21 61");
-  
+  //this.state = p4_fen2state("8/2P5/8/8/8/6K1/4Q3/6k1 w - - 21 61");
   /* castling */
   //this.state = p4_fen2state("r3k2r/8/8/8/8/8/3Q4/R3K2R w KQkq - 21 61");
-
-  p4_log = function(){}
 }
 
 Model.prototype = {
