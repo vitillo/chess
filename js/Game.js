@@ -1,20 +1,23 @@
-function Game(){
-  this._initialize();
+function Game(container){
+  this._initialize(container);
   this._registerEventHandlers();
   this._startEventLoop();
 }
 
 Game.prototype = {
-  _initialize: function(){
-    this.hud = new Hud();
+  _initialize: function(container){
+    var domContainer = document.getElementById(container);
+    domContainer.innerHTML = "<canvas></canvas>";
+    var canvas = domContainer.firstChild;
+ 
+    this.renderer = new THREE.WebGLRenderer({canvas: canvas, antialias: true}); 
+    this.renderer.setSize( window.innerWidth, window.innerHeight ); 
+    this.renderer.setClearColor(0x8CBED6);
+
+    this.hud = new Hud(this.renderer.domElement);
     this.state = new SplashScreen(this);
     this.scene = new THREE.Scene(); 
     this.board = new Board(this);
-
-    this.renderer = new THREE.WebGLRenderer({antialias: true}); 
-    this.renderer.setSize( window.innerWidth, window.innerHeight ); 
-    this.renderer.setClearColor(0x8CBED6);
-    document.body.appendChild( this.renderer.domElement );
 
     this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.2, 1000 ); 
     this.camera.position.z = 10;

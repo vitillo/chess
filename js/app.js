@@ -1,5 +1,5 @@
 window.onload = function(){
-  new Game();
+  new Game("chess", 640, 320);
 }
 
 function printMatrix(matrix){
