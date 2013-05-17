@@ -1,16 +1,17 @@
-function GameState(context){
-  this.context = context;
+function GameState(game){
+  this.game = game;
 }
-
 GameState.prototype.onclick = function(){}
+
 GameState.prototype.render = function(){}
+
 GameState.prototype._getTileFromClick = function(e){
   var x = 2*e.clientX/window.innerWidth - 1;
   var y = 2*(1 - e.clientY/window.innerHeight) - 1;
 
   var projector = new THREE.Projector();
-  var raycaster = projector.pickingRay(new THREE.Vector3(x, y, 1), game.camera);
-  var intersects = raycaster.intersectObjects(game.scene.children);
+  var raycaster = projector.pickingRay(new THREE.Vector3(x, y, 1), this.game.camera);
+  var intersects = raycaster.intersectObjects(this.game.scene.children);
 
   if(intersects.length > 0){
     for(var i = 0; i < intersects.length; i++){
@@ -26,143 +27,165 @@ GameState.prototype._getTileFromClick = function(e){
   return null;
 }
 
-function SplashGameState(context, message, reload){
+/***** SplashScreen ****/
+function SplashScreen(game, message, reloadPieces){
   GameState.apply(this, arguments);
 
-  context.hud.setText(message || "Press any key to start...");
-  this.reload = reload;
+  game.hud.setText(message || "Press any key to start...");
+  this.reloadPieces = reloadPieces;
 }
 
-SplashGameState.prototype = Object.create(GameState.prototype);
-SplashGameState.prototype.onclick = function(e){
-  this.context.state = new TerminateSplash(this.context);
-  if(this.reload)
-    this.context.board.loadPieces();
-}
-SplashGameState.prototype.render = function(time){
-  game.cameraWrapper.rotation.y += 0.01;
-  game.cameraWrapper.rotation.y %= 2*Math.PI;
+SplashScreen.prototype = Object.create(GameState.prototype);
+
+SplashScreen.prototype.onclick = function(e){
+  this.game.state = new TerminateSplashScreen(this.game);
+
+  if(this.reloadPieces)
+    this.game.board.loadPieces();
 }
 
-function TerminateSplash(context){
+SplashScreen.prototype.render = function(time){
+  this.game.cameraWrapper.rotation.y += 0.01;
+  this.game.cameraWrapper.rotation.y %= 2*Math.PI;
+}
+
+/***** TerminateSplashScreenScreen *****/
+function TerminateSplashScreen(game){
   GameState.apply(this, arguments);
 
-  context.hud.setText("");
-  this.rotationSign = game.cameraWrapper.rotation.y < Math.PI ? -1 : 1;
+  game.hud.setText("");
+  this.rotationSign = this.game.cameraWrapper.rotation.y < Math.PI ? -1 : 1;
 }
-TerminateSplash.prototype = Object.create(GameState.prototype);
-TerminateSplash.prototype.render = function(time){
+
+TerminateSplashScreen.prototype = Object.create(GameState.prototype);
+
+TerminateSplashScreen.prototype.render = function(time){
   var completed = false;
 
   if(this.rotationSign < 0){
-    game.cameraWrapper.rotation.y -= 0.1;
+    this.game.cameraWrapper.rotation.y -= 0.1;
 
-    if(game.cameraWrapper.rotation.y <= 0.2){
-      game.cameraWrapper.rotation.y = 0;
+    if(this.game.cameraWrapper.rotation.y <= 0.2){
+      this.game.cameraWrapper.rotation.y = 0;
       completed = true;
     }
   }else{
-    game.cameraWrapper.rotation.y += 0.1;
+    this.game.cameraWrapper.rotation.y += 0.1;
   
-    if(Math.abs(game.cameraWrapper.rotation.y % (2*Math.PI)) <= 0.2){
-      game.cameraWrapper.rotation.y = 2*Math.PI;
+    if(Math.abs(this.game.cameraWrapper.rotation.y % (2*Math.PI)) <= 0.2){
+      this.game.cameraWrapper.rotation.y = 2*Math.PI;
       completed = true;
     }
   }
 
   if(completed){
-    this.context.state = new WhiteSelectSrc(this.context);
+    this.game.state = new WhiteSelectSource(this.game);
   }
 }
 
-function WhiteSelectSrc(context, message){
+/***** WhiteSelectSource *****/
+function WhiteSelectSource(game, message){
   GameState.apply(this, arguments);
 
-  context.hud.setText(message ? message : "" + "Your turn!");
+  game.hud.setText(message ? message : "" + "Your turn!");
 }
 
-WhiteSelectSrc.prototype = Object.create(GameState.prototype);
-WhiteSelectSrc.prototype.onclick = function(e){
+WhiteSelectSource.prototype = Object.create(GameState.prototype);
+
+WhiteSelectSource.prototype.onclick = function(e){
   var anim;
   var tile = this._getTileFromClick(e);
 
   if(!tile)
     return;
 
-  game.board.highlight(tile);
-  if(tile.isHighlighted){
-    this.context.state = new WhiteSelectDest(this.context, tile);
-  }
+  this.game.board.highlight(tile);
+  if(tile.isHighlighted)
+    this.game.state = new WhiteSelectDestination(this.game, tile);
 }
 
-function WhiteSelectDest(context, source){
+/***** WhiteSelectDestination *****/
+function WhiteSelectDestination(game, source){
   GameState.apply(this, arguments);
   this.source = source;
 }
 
-WhiteSelectDest.prototype = Object.create(GameState.prototype);
-WhiteSelectDest.prototype.onclick = function(e){
+WhiteSelectDestination.prototype = Object.create(GameState.prototype);
+
+WhiteSelectDestination.prototype.onclick = function(e){
   var tile = this._getTileFromClick(e);
 
   if(!tile)
     return;
 
   if(tile == this.source){
-    this.context.state = new WhiteSelectSrc(this.context);
-    this.context.onclick(e);
+    this.game.state = new WhiteSelectSource(this.game);
+    this.game.onclick(e);
     return;
   }
 
   if(tile.isHighlighted){
-    var res = game.board.movePawn(this.source, tile);
-    this.context.state = new Animation(this.context, res, "white");
-    game.board.clear();
+    var res = this.game.board.movePiece(this.source, tile);
+    this.game.state = new Animation(this.game, res, "white");
+    this.game.board.clear();
   }else{
-    if(tile.pawn && tile.pawn.color == "white"){
-      this.context.state = new WhiteSelectSrc(this.context);
-      this.context.onclick(e);
+    if(tile.piece && tile.piece.color == "white"){
+      this.game.state = new WhiteSelectSource(this.game);
+      this.game.onclick(e);
     }
   }
 }
 
-function Animation(context, notes, player){
+/***** Animation *****/
+function Animation(game, notes, player){
   GameState.apply(this, arguments);
 
-  context.hud.setText("");
+  game.hud.setText("");
   this.notes = notes;
   this.player = player;
 }
 
 Animation.prototype = Object.create(GameState.prototype);
+
 Animation.prototype.render = function(time){
-  if(!this.notes.anim(time)){
+  var done = false;
+
+  for(var i = 0; i < this.notes.anim.length; i++){
+    if(!this.notes.anim[i](time))
+      done = true;
+  }
+
+  if(done){
     if(this.notes.gameover)
-      this.context.state = new End(this.context, this.notes.message);
+      this.game.state = new EndGame(this.game, this.notes.message);
     else
-      this.context.state = this.player == "white" ? new BlackSelect(this.context, this.notes.message) : new WhiteSelectSrc(this.context, this.notes.message);
+      this.game.state = this.player == "white" ? new BlackMove(this.game, this.notes.message) : new WhiteSelectSource(this.game, this.notes.message);
   }
 }
 
-function BlackSelect(context, message){
+/***** BlackMove *****/
+function BlackMove(game, message){
   GameState.apply(this, arguments);
 
-  context.hud.setText(message ? message : "" + "Let me think about...");
+  game.hud.setText(message ? message : "" + "Let me think about...");
 }
 
-BlackSelect.prototype = Object.create(GameState.prototype);
-BlackSelect.prototype.render = function(){
-  var move = game.board.model.findMove();
-  var res = game.board.movePawn(move.from, move.to);
-  this.context.state = new Animation(this.context, res, "black");
+BlackMove.prototype = Object.create(GameState.prototype);
+
+BlackMove.prototype.render = function(){
+  var move = this.game.board.model.findMove();
+  var res = this.game.board.movePiece(move.from, move.to);
+  this.game.state = new Animation(this.game, res, "black");
 }
 
-function End(context, reason){
+/***** EndGameGame *****/
+function EndGame(game, reason){
   GameState.apply(this, arguments);
 
   this.message = reason + " Press any key to start a new game.";
 }
 
-End.prototype = Object.create(GameState.prototype);
-End.prototype.render = function(){
-  this.context.state = new SplashGameState(this.context, this.message, true);
+EndGame.prototype = Object.create(GameState.prototype);
+EndGame.prototype.render = function(){
+  this.game.state = new SplashScreen(this.game, this.message, true);
 }

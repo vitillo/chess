@@ -1,9 +1,21 @@
-function Tile(x, y){
+function Tile(x, y, posX, posZ, size, is_white, game){
+  var square_geometry = new THREE.CubeGeometry(size, 0.1, size);
+  var black_material = new THREE.MeshPhongMaterial({color : 0x000000, ambient: 0x111111});
+  var white_material = new THREE.MeshPhongMaterial({color : 0xffffff, ambient: 0x111111});
+
   this.x = x;
   this.y = y;
-  this.square = undefined;
-  this.pawn = undefined;
   this.isHighlighted = false;
+
+  this.square = is_white ? new THREE.Mesh(square_geometry, white_material.clone()) : 
+                           new THREE.Mesh(square_geometry, black_material.clone());
+
+  this.square.position.x = posX;
+  this.square.position.z = posZ;
+  this.square.userData['tile'] = this;
+  this.square.userData['color'] = this.square.material.color.getHex();
+
+  game.scene.add(this.square);
 }
 
 Tile.prototype = {

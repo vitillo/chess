@@ -1,10 +1,7 @@
-function Board(size){
-  this.size = size;
+function Board(game){
+  this.game = game;
+  this.size = 2;
   this.board = [[], [], [], [], [], [], [], []];
-  
-  for(var i = 0;  i < 8; i++)
-    for(var j = 0; j < 8; j++)
-      this.board[i][j] = new Tile(i, j, this.board);
 
   this.loadBoard();
   this.loadPieces();
@@ -12,48 +9,34 @@ function Board(size){
 
 Board.prototype = {
   loadBoard : function(){
-    var square_geometry = new THREE.CubeGeometry(this.size, 0.1, this.size);
-    var black_material = new THREE.MeshPhongMaterial({color : 0x000000, ambient: 0x111111});
-    var white_material = new THREE.MeshPhongMaterial({color : 0xffffff, ambient: 0x111111});
-
     var is_white = false;
     var half = this.size/2;
 
-    for(var x = 3*this.size + half, i = 0; x >= -4*this.size + half; x-=this.size, i++){
+    for(var z = 3*this.size + half, i = 0; z >= -4*this.size + half; z-=this.size, i++){
       is_white = !is_white;
 
-      for(var z = -4*this.size + half, j = 0; z < 4*this.size + half; z+=this.size, j++){
-        var square = is_white ? new THREE.Mesh(square_geometry, white_material.clone()) : 
-                              new THREE.Mesh(square_geometry, black_material.clone());
-
-        square.position.x = z;
-        square.position.z = x;
+      for(var x = -4*this.size + half, j = 0; x < 4*this.size + half; x+=this.size, j++){
+        this.board[j][i] = new Tile(j, i, x, z, this.size, is_white, this.game);
         is_white = !is_white;
-        game.scene.add(square);
-
-        this.board[j][i].square = square;
-        square.userData['tile'] = this.board[j][i];
-        square.userData['color'] = square.material.color.getHex();
       }
     }
   },
 
   loadPieces : function(){
-    this.model = new Model("white");
-
     var board = this.board;
+    this.model = new Model("white");
 
     for(var i = 0; i < 8; i++){
       for(var j = 0; j < 8; j++){
-        if(board[i][j].pawn)
-          board[i][j].pawn.unload();
+        if(board[i][j].piece)
+          board[i][j].piece.unload();
 
-        var pawn = this.model.get(i, j);
-        if(!pawn)
+        var piece = this.model.get(i, j);
+        if(!piece)
           continue;
 
-        board[i][j].pawn && board[i][j].pawn.unload();
-        board[i][j].pawn = new Pawn(pawn.rank, pawn.color, this.getLocation(i, j), game.scene, board[i][j]);
+        board[i][j].piece && board[i][j].piece.unload();
+        board[i][j].piece = new Piece(piece.rank, piece.color, this.getLocation(i, j), this.game.scene, board[i][j]);
       }
     }
   },
@@ -66,13 +49,11 @@ Board.prototype = {
     return new THREE.Vector3(base_x + x * this.size, 0, base_z - y * this.size);
   },
 
-  movePawn: function(from, to){
+  movePiece: function(from, to){
     var self = this;
     var fromTile = this.board[from.x][from.y];
     var toTile = this.board[to.x][to.y];
-    var fromPos = this.getLocation(fromTile.x, fromTile.y);
-    var toPos = this.getLocation(toTile.x, toTile.y);
-    var pawn = fromTile.pawn;
+    var player = this.model.getPlayer();
     var res = {};
 
     var note = this.model.applyMove(fromTile, toTile);
@@ -89,10 +70,32 @@ Board.prototype = {
     }else if(note.check)
       res.message = "Check!";
     
-    toTile.pawn && toTile.pawn.unload();
+    res.anim = [this._createAnimation(fromTile, toTile, note)];
+
+    if(note.castleQueen){
+      if(player == "white")
+        res.anim.push(this._createAnimation(this.board[0][0], this.board[3][0], note, true));
+      else
+        res.anim.push(this._createAnimation(this.board[0][7], this.board[3][7], note, true));
+    }else if(note.castleKing){
+      if(player == "white")
+        res.anim.push(this._createAnimation(this.board[7][0], this.board[5][0], note, true));
+      else
+        res.anim.push(this._createAnimation(this.board[7][7], this.board[5][7], note, true));
+    }
+    
+    return res;
+  },
+
+  _createAnimation: function(fromTile, toTile, note, doJump){
+    var piece = fromTile.piece;
+    var fromPos = this.getLocation(fromTile.x, fromTile.y);
+    var toPos = this.getLocation(toTile.x, toTile.y);
+
+    toTile.piece && toTile.piece.unload();
 
     var cpoints = [fromPos];
-    if(pawn.rank == "knight"){
+    if(piece.rank == "knight" || doJump){
       cpoints.push(fromPos.clone().add(new THREE.Vector3(0, 2, 0)));
       cpoints.push(toPos.clone().add(new THREE.Vector3(0, 2, 0)));
     }
@@ -100,11 +103,9 @@ Board.prototype = {
 
     var spline = new THREE.Spline(cpoints);
     var duration = 1;
-
     var startTime = null;
-    var points = null;
 
-    res.anim = function(time){
+    return function(time){
       if(!startTime){
         startTime = time;
         return true;
@@ -116,26 +117,24 @@ Board.prototype = {
       if(current < duration){
         var n = (current/duration);
         var p = spline.getPoint(n);
-        pawn.position.set(p.x, p.y, p.z);
+        piece.position.set(p.x, p.y, p.z);
         return true;
       }else{
         var endPoint = cpoints[cpoints.length - 1];
-        pawn.position.set(endPoint.x, endPoint.y, endPoint.z);
+        piece.position.set(endPoint.x, endPoint.y, endPoint.z);
 
         if(note.promoted){
-          pawn.rank = "queen";
-          pawn.reload();
+          piece.rank = "queen";
+          piece.reload();
         }
 
-        toTile.pawn = pawn;
-        pawn.tile = toTile;
-        fromTile.pawn = null;
+        toTile.piece = piece;
+        piece.tile = toTile;
+        fromTile.piece = null;
 
         return false;
       }
     }
-
-    return res;
   },
 
   highlight : function(tile){
@@ -145,7 +144,7 @@ Board.prototype = {
     var moves;
     var move;
 
-    if(!tile.pawn || tile.pawn.color == "black")
+    if(!tile.piece || tile.piece.color == "black")
       return;
     else if(tile.isHighlighted){
       this.clear();

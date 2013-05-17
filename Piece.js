@@ -1,4 +1,4 @@
-function Pawn(rank, color, position, scene, tile){
+function Piece(rank, color, position, scene, tile){
   this.rank = rank;
   this.color = color;
   this.position = position;
@@ -8,7 +8,7 @@ function Pawn(rank, color, position, scene, tile){
   this.load(rank, scene);
 }
 
-Pawn.prototype = {
+Piece.prototype = {
   load : function(){
     var self = this;
     var loader = new THREE.JSONLoader();
@@ -36,7 +36,7 @@ Pawn.prototype = {
 
   unload: function(){
     this.scene.remove(this.mesh);
-    this.tile.pawn = null;
+    this.tile.piece = null;
   },
 
   reload: function(){

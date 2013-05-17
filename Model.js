@@ -1,11 +1,13 @@
 function Model(){
   //this.state = p4_new_game();
 
-  /* checkmate in 1 */
-  //this.state = p4_fen2state("8/8/8/8/8/6K1/4Q3/6k1 w - - 21 61");
-
-  /* promotion */
+  /* checkmate, stalemate, draw, promotion */
   this.state = p4_fen2state("8/2P5/8/8/8/6K1/4Q3/6k1 w - - 21 61");
+  
+  /* castling */
+  //this.state = p4_fen2state("r3k2r/8/8/8/8/8/3Q4/R3K2R w KQkq - 21 61");
+
+  p4_log = function(){}
 }
 
 Model.prototype = {
@@ -82,9 +84,13 @@ Model.prototype = {
     var checkMask = (P4_MOVE_FLAG_OK | P4_MOVE_FLAG_CHECK);
     var drawMask = (P4_MOVE_FLAG_OK | P4_MOVE_FLAG_DRAW);
     var promotionMask = (P4_MOVE_FLAG_OK | P4_MOVE_FLAG_PROMOTION);
+    var castleKing = (P4_MOVE_FLAG_OK | P4_MOVE_FLAG_CASTLE_KING);
+    var castleQueen = (P4_MOVE_FLAG_OK | P4_MOVE_FLAG_CASTLE_QUEEN);
     var res = {};
 
     res.promoted = (move.flags & promotionMask) == promotionMask;
+    res.castleKing = (move.flags & castleKing) == castleKing;
+    res.castleQueen = (move.flags & castleQueen) == castleQueen;
 
     if((move.flags & drawMask) == drawMask){
       res.draw = true;
@@ -94,8 +100,6 @@ Model.prototype = {
       res.stalemate = true;
     }else if((move.flags & checkMask) == checkMask){
       res.check = true;
-    }else if(move.flags & P4_MOVE_FLAG_CASTLE_KING){
-    }else if(move.flags & P4_MOVE_FLAG_CASTLE_QUEEN){
     }
 
     return res;

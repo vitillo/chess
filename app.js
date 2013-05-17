@@ -1,26 +1,5 @@
-var game = new Game();
-
-function render(time) { 
-  requestAnimationFrame(render);
-  game.render(time);
-} 
-
-document.onclick = function(e){
-  game.onclick(e);
-}
-
-document.onkeydown = function(e){
-  e = e || window.event;
-  
-  switch(e.keyCode){
-    default:
-      break;
-  }
-}
-
 window.onload = function(){
-  game.initialize();
-  render(new Date().getTime());
+  new Game();
 }
 
 function printMatrix(matrix){
@@ -31,4 +10,3 @@ function printMatrix(matrix){
   console.log(e[2], e[6], e[10], e[14]);
   console.log(e[3], e[7], e[11], e[15]);
 }
-
