@@ -2,6 +2,7 @@
   <head>
     <title>WebGL Chess</title>
     <style>
+      * { margin:0; padding:0; }
     </style>
   </head>
   <body>
@@ -14,7 +15,11 @@
     <script src="js/Model.js"></script>
     <script src="js/Board.js"></script>
     <script src="js/Piece.js"></script>
-    <script src="js/app.js"></script>
+    <script>
+      window.onload = function(){
+        new Game("chess");
+      }
+    </script>
     <div id="chess"></div>
   </body>
 </html>
