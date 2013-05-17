@@ -1,4 +1,5 @@
 function Game(){
+  this.hud = new Hud();
   this.state = new SplashGameState(this);
 }
 

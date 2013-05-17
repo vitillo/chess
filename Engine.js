@@ -767,12 +767,14 @@ function p4_make_move(state, s, e, promotion){
     var rs = 0, re, rook;
     var ep_taken = 0, ep_position;
     var ep = 0;
+    var promoted = false;
     if(piece == P4_PAWN){
         if((60 - e) * (60 - e) > 900){
             /*got to end; replace the pawn on board and in pieces cache.*/
             promotion |= moved_colour;
             board[e] = promotion;
             end_piece = promotion;
+            promoted = true;
         }
         else if (((s ^ e) & 1) && E == 0){
             /*this is a diagonal move, but the end spot is empty, so we surmise enpassant */
@@ -858,7 +860,8 @@ function p4_make_move(state, s, e, promotion){
         rook: rook,
         ep_position: ep_position,
         ep_taken: ep_taken,
-        pieces: old_pieces
+        pieces: old_pieces,
+        promoted: promoted
     };
 }
 
@@ -935,6 +938,7 @@ var P4_MOVE_FLAG_CAPTURE = 8;
 var P4_MOVE_FLAG_CASTLE_KING = 16;
 var P4_MOVE_FLAG_CASTLE_QUEEN = 32;
 var P4_MOVE_FLAG_DRAW = 64;
+var P4_MOVE_FLAG_PROMOTION = 128;
 
 var P4_MOVE_ILLEGAL = 0;
 var P4_MOVE_MISSED_MATE = P4_MOVE_FLAG_CHECK | P4_MOVE_FLAG_MATE;
@@ -992,6 +996,10 @@ function p4_move(state, s, e, promotion){
     /*The move is known to be legal. We won't be undoing it.*/
 
     var flags = P4_MOVE_FLAG_OK;
+
+    /*Pawn promoted?*/
+    if(changes.promoted)
+      flags |= P4_MOVE_FLAG_PROMOTION;
 
     state.enpassant = changes.ep;
     state.history.push([s, e, promotion]);

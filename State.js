@@ -26,20 +26,28 @@ GameState.prototype._getTileFromClick = function(e){
   return null;
 }
 
-function SplashGameState(context){
+function SplashGameState(context, message, reload){
   GameState.apply(this, arguments);
+
+  context.hud.setText(message || "Press any key to start...");
+  this.reload = reload;
 }
 
 SplashGameState.prototype = Object.create(GameState.prototype);
 SplashGameState.prototype.onclick = function(e){
   this.context.state = new TerminateSplash(this.context);
+  if(this.reload)
+    this.context.board.loadPieces();
 }
 SplashGameState.prototype.render = function(time){
-  game.cameraWrapper.rotation.y += 0.01 % (2*Math.PI);
+  game.cameraWrapper.rotation.y += 0.01;
+  game.cameraWrapper.rotation.y %= 2*Math.PI;
 }
 
 function TerminateSplash(context){
   GameState.apply(this, arguments);
+
+  context.hud.setText("");
   this.rotationSign = game.cameraWrapper.rotation.y < Math.PI ? -1 : 1;
 }
 TerminateSplash.prototype = Object.create(GameState.prototype);
@@ -67,8 +75,10 @@ TerminateSplash.prototype.render = function(time){
   }
 }
 
-function WhiteSelectSrc(context){
+function WhiteSelectSrc(context, message){
   GameState.apply(this, arguments);
+
+  context.hud.setText(message ? message : "" + "Your turn!");
 }
 
 WhiteSelectSrc.prototype = Object.create(GameState.prototype);
@@ -104,8 +114,8 @@ WhiteSelectDest.prototype.onclick = function(e){
   }
 
   if(tile.isHighlighted){
-    var anim = game.board.movePawn(this.source, tile);
-    this.context.state = new Animation(this.context, anim, "white");
+    var res = game.board.movePawn(this.source, tile);
+    this.context.state = new Animation(this.context, res, "white");
     game.board.clear();
   }else{
     if(tile.pawn && tile.pawn.color == "white"){
@@ -115,26 +125,44 @@ WhiteSelectDest.prototype.onclick = function(e){
   }
 }
 
-function Animation(context, animation, player){
+function Animation(context, notes, player){
   GameState.apply(this, arguments);
-  this.animation = animation;
+
+  context.hud.setText("");
+  this.notes = notes;
   this.player = player;
 }
 
 Animation.prototype = Object.create(GameState.prototype);
 Animation.prototype.render = function(time){
-  if(!this.animation(time)){
-    this.context.state = this.player == "white" ? new BlackSelect(this.context) : new WhiteSelectSrc(this.context);
+  if(!this.notes.anim(time)){
+    if(this.notes.gameover)
+      this.context.state = new End(this.context, this.notes.message);
+    else
+      this.context.state = this.player == "white" ? new BlackSelect(this.context, this.notes.message) : new WhiteSelectSrc(this.context, this.notes.message);
   }
 }
 
-function BlackSelect(context){
+function BlackSelect(context, message){
   GameState.apply(this, arguments);
+
+  context.hud.setText(message ? message : "" + "Let me think about...");
 }
 
 BlackSelect.prototype = Object.create(GameState.prototype);
 BlackSelect.prototype.render = function(){
   var move = game.board.model.findMove();
-  var anim = game.board.movePawn(move.from, move.to);
-  this.context.state = new Animation(this.context, anim, "black");
+  var res = game.board.movePawn(move.from, move.to);
+  this.context.state = new Animation(this.context, res, "black");
+}
+
+function End(context, reason){
+  GameState.apply(this, arguments);
+
+  this.message = reason + " Press any key to start a new game.";
+}
+
+End.prototype = Object.create(GameState.prototype);
+End.prototype.render = function(){
+  this.context.state = new SplashGameState(this.context, this.message, true);
 }

@@ -1,6 +1,11 @@
 function Model(){
-  this.state = p4_new_game();
-  this.nMoves = 0;
+  //this.state = p4_new_game();
+
+  /* checkmate in 1 */
+  //this.state = p4_fen2state("8/8/8/8/8/6K1/4Q3/6k1 w - - 21 61");
+
+  /* promotion */
+  this.state = p4_fen2state("8/2P5/8/8/8/6K1/4Q3/6k1 w - - 21 61");
 }
 
 Model.prototype = {
@@ -58,7 +63,7 @@ Model.prototype = {
         var move = this.state.move(start, end);
 
         if(move.ok){
-          this.state.jump_to_moveno(this.nMoves);
+          this.state.jump_to_moveno(-1);
           moves.push(this.decode(end));
         }
       }
@@ -70,13 +75,34 @@ Model.prototype = {
   applyMove: function(from, to){
     var start = this.encode(from);
     var end = this.encode(to);
+    var move = this.state.move(start, end);
 
-    this.state.move(start, end);
-    this.nMoves++;
+    var checkmateMask = P4_MOVE_CHECKMATE;
+    var stalemateMask = P4_MOVE_STALEMATE;
+    var checkMask = (P4_MOVE_FLAG_OK | P4_MOVE_FLAG_CHECK);
+    var drawMask = (P4_MOVE_FLAG_OK | P4_MOVE_FLAG_DRAW);
+    var promotionMask = (P4_MOVE_FLAG_OK | P4_MOVE_FLAG_PROMOTION);
+    var res = {};
+
+    res.promoted = (move.flags & promotionMask) == promotionMask;
+
+    if((move.flags & drawMask) == drawMask){
+      res.draw = true;
+    }else if((move.flags & checkmateMask) == checkmateMask){
+      res.checkmate = true;
+    }else if((move.flags & stalemateMask) == stalemateMask){
+      res.stalemate = true;
+    }else if((move.flags & checkMask) == checkMask){
+      res.check = true;
+    }else if(move.flags & P4_MOVE_FLAG_CASTLE_KING){
+    }else if(move.flags & P4_MOVE_FLAG_CASTLE_QUEEN){
+    }
+
+    return res;
   },
 
   findMove: function(){
-    var move = this.state.findmove(3);
+    var move = this.state.findmove(2);
 
     var from = this.decode(move[0]);
     var to = this.decode(move[1]);

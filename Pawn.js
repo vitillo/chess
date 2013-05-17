@@ -37,5 +37,10 @@ Pawn.prototype = {
   unload: function(){
     this.scene.remove(this.mesh);
     this.tile.pawn = null;
+  },
+
+  reload: function(){
+    this.scene.remove(this.mesh);
+    this.load();
   }
 };

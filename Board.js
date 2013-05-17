@@ -1,14 +1,13 @@
 function Board(size){
   this.size = size;
   this.board = [[], [], [], [], [], [], [], []];
-  this.model = new Model("white");
   
   for(var i = 0;  i < 8; i++)
     for(var j = 0; j < 8; j++)
       this.board[i][j] = new Tile(i, j, this.board);
 
   this.loadBoard();
-  this.loadPawns();
+  this.loadPieces();
 }
 
 Board.prototype = {
@@ -39,16 +38,21 @@ Board.prototype = {
     }
   },
 
-  loadPawns : function(){
+  loadPieces : function(){
+    this.model = new Model("white");
+
     var board = this.board;
 
     for(var i = 0; i < 8; i++){
       for(var j = 0; j < 8; j++){
-        var pawn = this.model.get(i, j);
+        if(board[i][j].pawn)
+          board[i][j].pawn.unload();
 
+        var pawn = this.model.get(i, j);
         if(!pawn)
           continue;
 
+        board[i][j].pawn && board[i][j].pawn.unload();
         board[i][j].pawn = new Pawn(pawn.rank, pawn.color, this.getLocation(i, j), game.scene, board[i][j]);
       }
     }
@@ -63,13 +67,28 @@ Board.prototype = {
   },
 
   movePawn: function(from, to){
+    var self = this;
     var fromTile = this.board[from.x][from.y];
     var toTile = this.board[to.x][to.y];
     var fromPos = this.getLocation(fromTile.x, fromTile.y);
     var toPos = this.getLocation(toTile.x, toTile.y);
     var pawn = fromTile.pawn;
+    var res = {};
 
-    this.model.applyMove(fromTile, toTile);
+    var note = this.model.applyMove(fromTile, toTile);
+
+    if(note.draw){
+      res.message = "Draw!"
+      res.gameover = true;
+    }else if(note.checkmate){
+      res.message = "Checkmate!";
+      res.gameover = true;
+    }else if(note.stalemate){
+      res.message = "Stalemate!";
+      res.gameover = true;
+    }else if(note.check)
+      res.message = "Check!";
+    
     toTile.pawn && toTile.pawn.unload();
 
     var cpoints = [fromPos];
@@ -85,7 +104,7 @@ Board.prototype = {
     var startTime = null;
     var points = null;
 
-    return function(time){
+    res.anim = function(time){
       if(!startTime){
         startTime = time;
         return true;
@@ -102,11 +121,21 @@ Board.prototype = {
       }else{
         var endPoint = cpoints[cpoints.length - 1];
         pawn.position.set(endPoint.x, endPoint.y, endPoint.z);
+
+        if(note.promoted){
+          pawn.rank = "queen";
+          pawn.reload();
+        }
+
         toTile.pawn = pawn;
+        pawn.tile = toTile;
         fromTile.pawn = null;
+
         return false;
       }
     }
+
+    return res;
   },
 
   highlight : function(tile){
