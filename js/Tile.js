@@ -1,6 +1,7 @@
 function Tile(x, y, posX, posZ, size, is_white, game){
+  var texture = THREE.ImageUtils.loadTexture("assets/pine_green.jpg");
   var square_geometry = new THREE.CubeGeometry(size, 0.1, size);
-  var black_material = new THREE.MeshPhongMaterial({color : 0x000000, ambient: 0x111111});
+  var black_material = new THREE.MeshPhongMaterial({map: texture, color : 0x444444, ambient: 0x111111});
   var white_material = new THREE.MeshPhongMaterial({color : 0xffffff, ambient: 0x111111});
 
   this.x = x;
@@ -10,6 +11,7 @@ function Tile(x, y, posX, posZ, size, is_white, game){
   this.square = is_white ? new THREE.Mesh(square_geometry, white_material.clone()) : 
                            new THREE.Mesh(square_geometry, black_material.clone());
 
+  this.square.receiveShadow = true;
   this.square.position.x = posX;
   this.square.position.z = posZ;
   this.square.userData['tile'] = this;
@@ -21,9 +23,9 @@ function Tile(x, y, posX, posZ, size, is_white, game){
 Tile.prototype = {
   highlight: function(activate){
     if(activate){
-      var high = new THREE.Color(0xff4500);
+      var high = new THREE.Color(0x44BB44);
       var color = this.square.material.color;
-      var a = 0.6;
+      var a = 0.8;
       var r = a*high.r+(1-a)*color.r;
       var g = a*high.g+(1-a)*color.g;
       var b = a*high.b+(1-a)*color.b;

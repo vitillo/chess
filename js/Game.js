@@ -14,6 +14,8 @@ Game.prototype = {
     this.renderer = new THREE.WebGLRenderer({canvas: canvas, antialias: true}); 
     this.renderer.setSize( window.innerWidth, window.innerHeight); 
     this.renderer.setClearColor(0x8CBED6);
+    this.renderer.shadowMapEnabled = true;
+    this.renderer.shadowMapSoft = true;
 
     this.hud = new Hud(this.renderer.domElement);
     this.state = new SplashScreen(this);
@@ -28,7 +30,21 @@ Game.prototype = {
     this.cameraWrapper = new THREE.Object3D();
     this.cameraWrapper.add(this.camera);
 
-    this.scene.add(new THREE.DirectionalLight(0xffffff));
+    var light = new THREE.DirectionalLight( 0xffffff );
+    light.position.set(2, 10, 2);
+    light.target.position.set(0, 0, 0);
+
+    light.castShadow = true;
+    light.shadowDarkness = 0.7;
+
+    light.shadowCameraNear = -2;
+    light.shadowCameraFar = 20;
+    light.shadowCameraLeft = -12;
+    light.shadowCameraRight = 12;
+    light.shadowCameraTop = 12;
+    light.shadowCameraBottom = -12;
+
+    this.scene.add( light );
     this.scene.add(new THREE.AmbientLight(0xffffff));
     this.scene.add(this.cameraWrapper);
   },
