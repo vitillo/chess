@@ -73,6 +73,12 @@ Game.prototype = {
       e = e || window.event;
       self.onkeydown(e);
     }
+
+    window.onresize = function(e){
+      self.renderer.setSize(window.innerWidth, window.innerHeight);
+      self.camera.aspect = window.innerWidth / window.innerHeight;
+      self.camera.updateProjectionMatrix();
+    }
   },
 
   _startEventLoop: function(){

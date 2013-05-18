@@ -20,6 +20,16 @@ Board.prototype = {
         is_white = !is_white;
       }
     }
+
+    var base_texture = THREE.ImageUtils.loadTexture("assets/pine_green.jpg");
+    var base_geometry = new THREE.CubeGeometry(8 * this.size + 1.5, 0.1, 8 * this.size + 1.5);
+    var base_material = new THREE.MeshPhongMaterial({map: base_texture, color : 0x222222, ambient: 0x111111});
+    var base = new THREE.Mesh(base_geometry, base_material);
+
+    base.receiveShadow = true;
+    base.position.set(0, -.1, 0);
+
+    this.game.scene.add(base);
   },
 
   loadPieces : function(){

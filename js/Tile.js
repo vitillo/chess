@@ -1,7 +1,7 @@
 function Tile(x, y, posX, posZ, size, is_white, game){
   var texture = THREE.ImageUtils.loadTexture("assets/pine_green.jpg");
   var square_geometry = new THREE.CubeGeometry(size, 0.1, size);
-  var black_material = new THREE.MeshPhongMaterial({map: texture, color : 0x444444, ambient: 0x111111});
+  var black_material = new THREE.MeshPhongMaterial({map: texture, color : 0x555555, ambient: 0x111111});
   var white_material = new THREE.MeshPhongMaterial({color : 0xffffff, ambient: 0x111111});
 
   this.x = x;
